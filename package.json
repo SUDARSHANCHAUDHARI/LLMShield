@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "LLMShield is a lightweight CLI toolkit for testing LLM prompts against prompt leaks, jailbreaks, and prompt injection attacks.",
   "type": "module",
+  "packageManager": "pnpm@10.0.0",
   "bin": {
     "llmshield": "dist/cli.js"
   },
@@ -33,5 +34,10 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
