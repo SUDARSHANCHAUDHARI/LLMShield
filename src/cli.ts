@@ -5,11 +5,12 @@ import { env } from './config/env.js';
 import { runScan } from './scanner/scan.js';
 import { getAttackRegistry } from './attacks/registry.js';
 import { readTextFile, writeTextFile } from './utils/file.js';
-import { toJsonReport } from './reports/json.js';
+import { formatReport } from './reports/format.js';
 import { logger } from './utils/logger.js';
 import type { ProviderName } from './types.js';
 
 const providerSchema = z.enum(['mock', 'openrouter', 'openai', 'anthropic']);
+const reportFormatSchema = z.enum(['json', 'markdown']);
 
 const program = new Command();
 
@@ -25,9 +26,11 @@ program
   .option('-p, --prompt <prompt>', 'System prompt text')
   .option('--provider <provider>', 'Provider: mock, openrouter, openai, anthropic', env.defaultProvider)
   .option('-m, --model <model>', 'Model name', env.defaultModel)
-  .option('-o, --output <path>', 'Write JSON report to file')
+  .option('--format <format>', 'Report format: json, markdown', 'json')
+  .option('-o, --output <path>', 'Write report to file')
   .action(async options => {
     const provider = providerSchema.parse(options.provider) as ProviderName;
+    const reportFormat = reportFormatSchema.parse(options.format);
     const systemPrompt = options.file ? await readTextFile(options.file) : options.prompt;
 
     if (!systemPrompt) {
@@ -41,10 +44,10 @@ program
       output: options.output
     });
 
-    const json = toJsonReport(report);
+    const output = formatReport(report, reportFormat);
 
     if (options.output) {
-      await writeTextFile(options.output, json);
+      await writeTextFile(options.output, output);
       logger.info(`Report written to ${options.output}`);
     }
 

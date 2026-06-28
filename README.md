@@ -2,14 +2,14 @@
 
 LLMShield is a lightweight TypeScript CLI toolkit for testing LLM system prompts against prompt leaks, jailbreaks, prompt injection, and unsafe instruction override behavior.
 
-This scaffold is intentionally small. Build the working scanner first, then add dashboard, CI integrations, and more providers later.
+The first product surface is a developer CLI that produces security-grade reports for PRs, audits, and release checks.
 
 ## Features
 
 - Scan a system prompt from a file or direct CLI input
 - Run basic attack prompts
 - Detect possible prompt leakage
-- Generate JSON report output
+- Generate JSON or Markdown report output
 - OpenRouter provider support
 - Mock provider for local testing
 
@@ -50,7 +50,13 @@ pnpm dev scan --file examples/system-prompt.txt --provider openrouter --model op
 Write report:
 
 ```bash
-pnpm dev scan --file examples/system-prompt.txt --provider mock --output reports/result.json
+pnpm dev scan --file examples/system-prompt.txt --provider mock --format json --output reports/result.json
+```
+
+Write Markdown report:
+
+```bash
+pnpm dev scan --file examples/system-prompt.txt --provider mock --format markdown --output reports/result.md
 ```
 
 List attacks:
@@ -70,10 +76,16 @@ pnpm dev providers
 1. Improve leakage evaluator
 2. Add more attack cases
 3. Add multi-turn attack runner
-4. Add Markdown report output
-5. Add OpenAI and Anthropic providers
-6. Add config file support
-7. Add RAG prompt injection tests
+4. Add OpenAI and Anthropic providers
+5. Add config file support
+6. Add RAG prompt injection tests
+
+## Verification
+
+```bash
+pnpm test
+pnpm build
+```
 
 ## Project Structure
 
