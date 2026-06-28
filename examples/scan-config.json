@@ -1,0 +1,12 @@
+{
+  "provider": "mock",
+  "model": "mock-safe-model",
+  "categories": [
+    "direct-extraction",
+    "prompt-injection",
+    "jailbreak",
+    "roleplay",
+    "encoding",
+    "multi-turn"
+  ]
+}

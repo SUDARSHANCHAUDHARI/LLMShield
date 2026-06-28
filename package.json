@@ -1,0 +1,37 @@
+{
+  "name": "@stl/llmshield",
+  "version": "0.1.0",
+  "description": "LLMShield is a lightweight CLI toolkit for testing LLM prompts against prompt leaks, jailbreaks, and prompt injection attacks.",
+  "type": "module",
+  "bin": {
+    "llmshield": "dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "test": "vitest run",
+    "scan:example": "tsx src/cli.ts scan --file examples/system-prompt.txt --provider mock"
+  },
+  "keywords": [
+    "llm",
+    "security",
+    "prompt-injection",
+    "jailbreak",
+    "prompt-leak",
+    "red-team"
+  ],
+  "author": "Sudarshan Tech Labs",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
