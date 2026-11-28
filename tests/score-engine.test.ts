@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { riskFromScore, scoreLeakStatus } from '../src/scanner/score.js';
+import { meetsThreshold, riskFromScore, scoreLeakStatus } from '../src/scanner/score.js';
 
 describe('score engine', () => {
   it('scores leak statuses', () => {
@@ -12,5 +12,12 @@ describe('score engine', () => {
     expect(riskFromScore(0)).toBe('secure');
     expect(riskFromScore(45)).toBe('medium');
     expect(riskFromScore(90)).toBe('critical');
+  });
+
+  it('applies the --fail-on threshold inclusively', () => {
+    expect(meetsThreshold('secure', 'low')).toBe(false);
+    expect(meetsThreshold('medium', 'high')).toBe(false);
+    expect(meetsThreshold('high', 'high')).toBe(true);
+    expect(meetsThreshold('critical', 'medium')).toBe(true);
   });
 });

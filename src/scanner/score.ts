@@ -11,6 +11,13 @@ export function scoreLeakStatus(status: LeakStatus): number {
   }
 }
 
+export const riskLevels: readonly RiskLevel[] = ['secure', 'low', 'medium', 'high', 'critical'];
+
+/** True when `risk` is at or above the `failOn` threshold. */
+export function meetsThreshold(risk: RiskLevel, failOn: Exclude<RiskLevel, 'secure'>): boolean {
+  return riskLevels.indexOf(risk) >= riskLevels.indexOf(failOn);
+}
+
 export function riskFromScore(score: number): RiskLevel {
   const safeScore = clamp(score, 0, 100);
   if (safeScore === 0) return 'secure';

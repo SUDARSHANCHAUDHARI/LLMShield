@@ -73,6 +73,14 @@ Write Markdown report:
 pnpm dev scan --file examples/system-prompt.txt --provider mock --format markdown --output reports/result.md
 ```
 
+Fail a CI job when the overall risk is high or worse (exit code 1; the report is still written):
+
+```bash
+pnpm dev scan --file examples/system-prompt.txt --provider openrouter --fail-on high
+```
+
+`--fail-on` accepts `low`, `medium`, `high` or `critical`. Without it the scan always exits 0 unless it errors.
+
 List attacks:
 
 ```bash
