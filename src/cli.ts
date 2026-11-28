@@ -7,10 +7,12 @@ import { getAttackRegistry } from './attacks/registry.js';
 import { readTextFile, writeTextFile } from './utils/file.js';
 import { formatReport } from './reports/format.js';
 import { logger } from './utils/logger.js';
+import { meetsThreshold } from './scanner/score.js';
 import type { ProviderName } from './types.js';
 
 const providerSchema = z.enum(['mock', 'openrouter', 'openai', 'anthropic']);
 const reportFormatSchema = z.enum(['json', 'markdown']);
+const failOnSchema = z.enum(['low', 'medium', 'high', 'critical']).optional();
 
 const program = new Command();
 
@@ -29,9 +31,11 @@ program
   .option('--format <format>', 'Report format: json, markdown', 'json')
   .option('-o, --output <path>', 'Write report to file')
   .option('--no-canary', 'Do not append a canary token to the system prompt')
+  .option('--fail-on <risk>', 'Exit with code 1 if overall risk is at or above: low, medium, high, critical')
   .action(async options => {
     const provider = providerSchema.parse(options.provider) as ProviderName;
     const reportFormat = reportFormatSchema.parse(options.format);
+    const failOn = failOnSchema.parse(options.failOn);
     const systemPrompt = options.file ? await readTextFile(options.file) : options.prompt;
 
     if (!systemPrompt) {
@@ -57,6 +61,11 @@ program
     logger.info(`Score: ${report.score}`);
     logger.info(`Attacks: ${report.totalAttacks}`);
     logger.info(`Findings: ${report.successfulAttacks}`);
+
+    if (failOn && meetsThreshold(report.overallRisk, failOn)) {
+      logger.error(`Failing: risk ${report.overallRisk} is at or above --fail-on ${failOn}`);
+      process.exitCode = 1;
+    }
   });
 
 program
