@@ -4,28 +4,19 @@ import { env } from './config/env.js';
 import { runScan } from './scanner/scan.js';
 import { getAttackRegistry } from './attacks/registry.js';
 import { readTextFile, writeTextFile } from './utils/file.js';
-import { formatReport, type ReportFormat } from './reports/format.js';
+import { formatReport } from './reports/format.js';
 import { logger } from './utils/logger.js';
 import { oneOf, optionalOneOf } from './utils/choice.js';
+import {
+  categoryNames,
+  failOnLevels,
+  parseCategoryList,
+  providerNames,
+  readScanConfig,
+  reportFormats,
+  type ScanConfigFile
+} from './config/file.js';
 import { meetsThreshold } from './scanner/score.js';
-import type { ProviderName, RiskLevel } from './types.js';
-
-const providerNames = [
-  'mock',
-  'mock-leaky',
-  'openrouter',
-  'openai',
-  'anthropic'
-] as const satisfies readonly ProviderName[];
-
-const reportFormats = ['json', 'markdown'] as const satisfies readonly ReportFormat[];
-
-const failOnLevels = [
-  'low',
-  'medium',
-  'high',
-  'critical'
-] as const satisfies readonly Exclude<RiskLevel, 'secure'>[];
 
 const program = new Command();
 
@@ -45,10 +36,32 @@ program
   .option('-o, --output <path>', 'Write report to file')
   .option('--no-canary', 'Do not append a canary token to the system prompt')
   .option('--fail-on <risk>', 'Exit with code 1 if overall risk is at or above: low, medium, high, critical')
-  .action(async options => {
-    const provider = oneOf('--provider', options.provider, providerNames);
-    const reportFormat = oneOf('--format', options.format, reportFormats);
-    const failOn = optionalOneOf('--fail-on', options.failOn, failOnLevels);
+  .option(
+    '--category <name...>',
+    `Only run attacks in these categories, repeated or comma-separated: ${categoryNames.join(', ')}`
+  )
+  .option('--config <path>', 'Read provider, model, categories and report settings from a JSON file')
+  .action(async (options, command) => {
+    const config: ScanConfigFile = options.config ? await readScanConfig(options.config) : {};
+
+    // Precedence: an explicit flag beats the config file, which beats the env default.
+    // getOptionValueSource tells a flag the user typed apart from one commander filled in, which
+    // is the only way to know whether a default should give way to the config file.
+    const fromCli = (name: string): boolean => command.getOptionValueSource(name) === 'cli';
+    const settle = <T>(name: string, flagValue: T, configValue: T | undefined): T =>
+      fromCli(name) || configValue === undefined ? flagValue : configValue;
+
+    const provider = oneOf('--provider', settle('provider', options.provider, config.provider), providerNames);
+    const reportFormat = oneOf('--format', settle('format', options.format, config.format), reportFormats);
+    const failOn = optionalOneOf('--fail-on', settle('failOn', options.failOn, config.failOn), failOnLevels);
+    const model = settle('model', options.model, config.model);
+    const output = settle('output', options.output, config.output);
+    const canary = settle('canary', options.canary, config.canary);
+
+    const categories = options.category
+      ? parseCategoryList('--category', options.category as unknown[])
+      : config.categories;
+
     const systemPrompt = options.file ? await readTextFile(options.file) : options.prompt;
 
     if (!systemPrompt) {
@@ -59,16 +72,17 @@ program
       systemPrompt,
       provider,
       // Mock providers ignore the model; report the provider name instead of a misleading default.
-      model: provider.startsWith('mock') ? provider : options.model,
-      output: options.output,
-      canary: options.canary
+      model: provider.startsWith('mock') ? provider : model,
+      output,
+      includeCategories: categories,
+      canary
     });
 
-    const output = formatReport(report, reportFormat);
+    const rendered = formatReport(report, reportFormat);
 
-    if (options.output) {
-      await writeTextFile(options.output, output);
-      logger.info(`Report written to ${options.output}`);
+    if (output) {
+      await writeTextFile(output, rendered);
+      logger.info(`Report written to ${output}`);
     }
 
     logger.info(`Risk: ${report.overallRisk}`);

@@ -114,6 +114,45 @@ pnpm dev scan --file examples/system-prompt.txt --provider openrouter --fail-on 
 
 `--fail-on` accepts `low`, `medium`, `high` or `critical`. Without it, a scan that completes never fails the job.
 
+Scan one category at a time while you iterate on a defence, instead of paying for all 20 attacks
+on every run:
+
+```bash
+pnpm dev scan --file prompt.txt --provider openrouter --category encoding
+pnpm dev scan --file prompt.txt --provider openrouter --category encoding,jailbreak
+```
+
+`--category` accepts `direct-extraction`, `prompt-injection`, `jailbreak`, `roleplay`, `encoding`
+and `multi-turn`. Repeat the flag or separate names with commas; both work. An unknown name is an
+error, not an empty scan.
+
+### Config file
+
+Put the settings you reuse in a JSON file and pass `--config`:
+
+```json
+{
+  "provider": "mock-leaky",
+  "model": "openai/gpt-4o-mini",
+  "categories": ["direct-extraction", "prompt-injection", "jailbreak", "encoding"],
+  "failOn": "high",
+  "format": "markdown",
+  "output": "reports/scan.md",
+  "canary": true
+}
+```
+
+```bash
+pnpm dev scan --file prompt.txt --config examples/scan-config.json
+```
+
+Every key mirrors the flag of the same name, and all of them are optional. **An explicit flag beats
+the config file, which beats the environment default**, so you can keep a committed config and
+override one setting for a single run.
+
+An unknown key is rejected rather than ignored — a config file whose typo'd key silently does
+nothing is worse than no config file at all.
+
 ### Exit codes
 
 | Code | Meaning |
@@ -147,9 +186,8 @@ promptfoo and garak are broader evaluation and red-teaming frameworks, with many
 1. Publish to npm (`@sudarshanchaudhari/llmshield`) and add a GitHub Action
 2. Add multi-turn attack runner
 3. Add OpenAI and Anthropic providers
-4. Add config file support
-5. Add RAG prompt injection tests
-6. Optional model-judged check for paraphrased leaks
+4. Add RAG prompt injection tests
+5. Optional model-judged check for paraphrased leaks
 
 ## Verification
 
