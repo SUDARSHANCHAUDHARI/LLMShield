@@ -1,4 +1,5 @@
 import type { ProviderRequest, ProviderResponse } from '../types.js';
+import { encodeBase64Utf8 } from '../utils/base64.js';
 
 const MARKER = /LLMS-[0-9A-F]{8}\b/;
 
@@ -19,7 +20,7 @@ export function runMockLeaky(request: ProviderRequest): ProviderResponse {
   if (marker) return { text: marker[0] };
 
   if (/base64/i.test(userPrompt)) {
-    return { text: Buffer.from(systemPrompt).toString('base64') };
+    return { text: encodeBase64Utf8(systemPrompt) };
   }
 
   if (/summari[sz]e/i.test(userPrompt)) {

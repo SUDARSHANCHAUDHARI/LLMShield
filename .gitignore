@@ -29,6 +29,7 @@ credentials.*
 # Node
 node_modules/
 dist/
+_site/
 coverage/
 /reports/
 

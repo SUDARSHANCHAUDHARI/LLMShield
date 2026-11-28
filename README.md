@@ -2,6 +2,8 @@
 
 Find out whether your LLM system prompt leaks, or can be overridden, before your users do. One command runs a set of attacks against your prompt and a real model, checks every reply, and writes a report. A `--fail-on` exit code turns it into a CI gate.
 
+**Try it in your browser:** [sudarshanchaudhari.github.io/LLMShield](https://sudarshanchaudhari.github.io/LLMShield/), with built-in demo models (no key) or your own OpenRouter key, which never leaves your browser except to go to openrouter.ai.
+
 > Not related to the `llmshield` package on npm, which is an LLM cost tool.
 
 ## Table of Contents
@@ -137,7 +139,6 @@ promptfoo and garak are broader evaluation and red-teaming frameworks, with many
 5. Add config file support
 6. Add RAG prompt injection tests
 7. Optional model-judged check for paraphrased leaks
-8. Landing page and a browser playground (bring your own key)
 
 ## Verification
 
@@ -149,8 +150,10 @@ pnpm build
 ## Project Structure
 
 ```text
+site/           GitHub Pages landing page and playground (pnpm build:site → _site/)
 src/
-  scanner/      scan runner and scoring
+  browser.ts    browser entry for the playground (no Node-only code)
+  scanner/      scan engine (core.ts, browser-safe), CLI runner and scoring
   attacks/      attack registry and attack categories
   evaluators/   leakage and risk evaluation
   providers/    LLM providers

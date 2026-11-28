@@ -1,4 +1,5 @@
 import type { LeakStatus } from '../types.js';
+import { decodeBase64Utf8 } from '../utils/base64.js';
 
 const SHINGLE_SIZE = 4;
 const MAX_EVIDENCE_SPANS = 5;
@@ -41,8 +42,8 @@ export function responseVariants(response: string): Array<{ label: string; text:
   const variants = [{ label: 'plain', text: response }];
 
   for (const run of response.match(BASE64_RUN) ?? []) {
-    const decoded = Buffer.from(run, 'base64').toString('utf8');
-    if (isMostlyPrintable(decoded)) variants.push({ label: 'base64', text: decoded });
+    const decoded = decodeBase64Utf8(run);
+    if (decoded && isMostlyPrintable(decoded)) variants.push({ label: 'base64', text: decoded });
   }
 
   variants.push({ label: 'reversed', text: [...response].reverse().join('') });
