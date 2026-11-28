@@ -6,7 +6,13 @@ export type AttackCategory =
   | 'jailbreak'
   | 'roleplay'
   | 'encoding'
-  | 'multi-turn';
+  | 'multi-turn'
+  /**
+   * Indirect injection: the instruction arrives inside content the application fetched and
+   * pasted in — a retrieved document, a scraped page, an API result — rather than from the
+   * person typing. Distinct from 'prompt-injection', where the user asks directly.
+   */
+  | 'rag';
 
 export type RiskLevel = 'secure' | 'low' | 'medium' | 'high' | 'critical';
 
