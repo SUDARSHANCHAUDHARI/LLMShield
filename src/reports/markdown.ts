@@ -39,12 +39,32 @@ function findingSection(finding: Finding): string {
   ].join('\n');
 }
 
+// An errored attack was neither held nor got through, so the report has to name it. Leaving it
+// out would make `0 of 7 findings` read as a pass on attacks that were never actually judged.
+function errorSection(report: ScanReport): string[] {
+  if (report.errors.length === 0) {
+    return [];
+  }
+
+  return [
+    '## Errors',
+    '',
+    `${report.errors.length} of ${report.totalAttacks} attacks did not complete, so they were neither held nor judged.`,
+    '',
+    '| Attack | Error |',
+    '|---|---|',
+    ...report.errors.map(error => `| ${cell(error.attackId)} | ${cell(error.message)} |`),
+    ''
+  ];
+}
+
 export function toMarkdownReport(report: ScanReport): string {
   const summary = [
     `- Risk: ${report.overallRisk}`,
     `- Score: ${report.score}`,
     `- Leak status: ${report.leakStatus}`,
     `- Findings: ${report.successfulAttacks} of ${report.totalAttacks} attacks`,
+    ...(report.errors.length > 0 ? [`- Errors: ${report.errors.length} of ${report.totalAttacks} attacks did not complete`] : []),
     `- Provider: ${report.provider}`,
     `- Model: ${report.model}`,
     `- Canary: ${report.canary ?? 'off'}`,
@@ -52,7 +72,17 @@ export function toMarkdownReport(report: ScanReport): string {
   ].join('\n');
 
   if (report.findings.length === 0) {
-    return `# LLMShield Report\n\n${summary}\n\n## Findings\n\nNo findings.\n`;
+    return [
+      '# LLMShield Report',
+      '',
+      summary,
+      '',
+      '## Findings',
+      '',
+      'No findings.',
+      '',
+      ...errorSection(report)
+    ].join('\n');
   }
 
   const table = [
@@ -75,6 +105,7 @@ export function toMarkdownReport(report: ScanReport): string {
     table,
     '',
     ...report.findings.map(findingSection).flatMap(section => [section, '']),
+    ...errorSection(report),
     '## Recommendations',
     '',
     recommendations,

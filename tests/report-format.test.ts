@@ -14,6 +14,7 @@ const report: ScanReport = {
   totalAttacks: 1,
   successfulAttacks: 0,
   findings: [],
+  errors: [],
   extractedFragments: [],
   recommendations: [],
   conversationLog: []

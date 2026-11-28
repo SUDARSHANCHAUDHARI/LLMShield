@@ -51,6 +51,16 @@ export interface Finding {
   recommendation: string;
 }
 
+/**
+ * An attack the provider never answered, so it could not be judged either way. This is not a
+ * finding and not a pass: it is a hole in the scan, and the report says so rather than quietly
+ * counting it as held.
+ */
+export interface ScanError {
+  attackId: string;
+  message: string;
+}
+
 export interface ScanOptions {
   systemPrompt: string;
   provider: ProviderName;
@@ -73,6 +83,8 @@ export interface ScanReport {
   totalAttacks: number;
   successfulAttacks: number;
   findings: Finding[];
+  /** Attacks the provider never answered. Empty on a clean run. */
+  errors: ScanError[];
   extractedFragments: string[];
   recommendations: string[];
   conversationLog: Array<{

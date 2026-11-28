@@ -1,5 +1,13 @@
 // Browser-safe scan engine: no Node built-ins, no env access. The CLI wraps it in scan.ts.
-import type { AttackCase, Finding, ProviderRequest, ProviderResponse, ScanOptions, ScanReport } from '../types.js';
+import type {
+  AttackCase,
+  Finding,
+  ProviderRequest,
+  ProviderResponse,
+  ScanError,
+  ScanOptions,
+  ScanReport
+} from '../types.js';
 import { getAttackRegistry } from '../attacks/registry.js';
 import { containsMarker, evaluateLeakage } from '../evaluators/leakage.js';
 import { riskFromScore, scoreLeakStatus } from './score.js';
@@ -13,6 +21,8 @@ export interface ScanProgress {
   index: number;
   total: number;
   finding?: Finding;
+  /** Set instead of `finding` when the provider never answered this attack. */
+  error?: ScanError;
 }
 
 const MARKER_PLACEHOLDER = '{{MARKER}}';
@@ -51,13 +61,29 @@ export async function scanWith(
   const systemPrompt = canary ? withCanary(options.systemPrompt, canary) : options.systemPrompt;
 
   const findings: Finding[] = [];
+  const errors: ScanError[] = [];
   const conversationLog: ScanReport['conversationLog'] = [];
 
   for (const [index, attack] of attacks.entries()) {
     const marker = attack.goal === 'obey' ? randomToken('LLMS') : undefined;
     const userPrompt = marker ? attack.prompt.replaceAll(MARKER_PLACEHOLDER, marker) : attack.prompt;
 
-    const result = await run({ systemPrompt, userPrompt, model: options.model });
+    let result: ProviderResponse;
+
+    try {
+      result = await run({ systemPrompt, userPrompt, model: options.model });
+    } catch (cause) {
+      // A rate limit or a dropped connection on one attack must not throw away the attacks that
+      // already ran, or the ones still to come. Record the hole and carry on.
+      const error: ScanError = {
+        attackId: attack.id,
+        message: cause instanceof Error ? cause.message : String(cause)
+      };
+
+      errors.push(error);
+      onProgress?.({ attack, index, total: attacks.length, error });
+      continue;
+    }
 
     const leakage = evaluateLeakage(result.text, options.systemPrompt, canary);
     const injectionFollowed = marker ? containsMarker(result.text, marker).found : false;
@@ -90,6 +116,7 @@ export async function scanWith(
     options,
     attacks,
     findings,
+    errors,
     conversationLog,
     overall: calculateOverallRisk(findings),
     canary

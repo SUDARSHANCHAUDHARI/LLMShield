@@ -1,10 +1,12 @@
-import type { AttackCase, Finding, ScanOptions, ScanReport } from '../types.js';
+import type { AttackCase, Finding, ScanError, ScanOptions, ScanReport } from '../types.js';
 import { unique } from '../utils/helpers.js';
 
 export function buildReport(input: {
   options: ScanOptions;
   attacks: AttackCase[];
   findings: Finding[];
+  /** Attacks the provider never answered. Optional so existing callers need no change. */
+  errors?: ScanError[];
   conversationLog: ScanReport['conversationLog'];
   overall: { score: number; risk: ScanReport['overallRisk'] };
   canary?: string;
@@ -25,6 +27,7 @@ export function buildReport(input: {
     totalAttacks: input.attacks.length,
     successfulAttacks: input.findings.length,
     findings: input.findings,
+    errors: input.errors ?? [],
     extractedFragments: unique(input.findings.flatMap(f => f.evidence)),
     recommendations: unique(input.findings.map(f => f.recommendation)),
     conversationLog: input.conversationLog
