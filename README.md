@@ -43,8 +43,8 @@ Output:
 Report written to reports/demo.md
 Risk: critical
 Score: 100
-Attacks: 7
-Findings: 7
+Attacks: 20
+Findings: 20
 Failing: risk critical is at or above --fail-on high
 ```
 
@@ -140,17 +140,16 @@ pnpm dev providers
 
 ## How it compares
 
-promptfoo and garak are broader evaluation and red-teaming frameworks, with many more attacks, providers and options. LLMShield is deliberately narrow: one system prompt, a fixed attack set, deterministic checks, no config file, and a report you can read in a minute. Use it as a quick gate; reach for a framework when you need depth.
+promptfoo and garak are broader evaluation and red-teaming frameworks, with many more attacks, providers and options. LLMShield is deliberately narrow: one system prompt, a fixed set of 20 attacks across six categories, deterministic checks, no config file, and a report you can read in a minute. Use it as a quick gate; reach for a framework when you need depth.
 
 ## Roadmap
 
 1. Publish to npm (`@sudarshanchaudhari/llmshield`) and add a GitHub Action
-2. Add more attack cases
-3. Add multi-turn attack runner
-4. Add OpenAI and Anthropic providers
-5. Add config file support
-6. Add RAG prompt injection tests
-7. Optional model-judged check for paraphrased leaks
+2. Add multi-turn attack runner
+3. Add OpenAI and Anthropic providers
+4. Add config file support
+5. Add RAG prompt injection tests
+6. Optional model-judged check for paraphrased leaks
 
 ## Verification
 
