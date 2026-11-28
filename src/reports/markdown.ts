@@ -7,8 +7,11 @@ function truncate(text: string, max: number): string {
   return text.length > max ? `${text.slice(0, max)}…` : text;
 }
 
-function cell(text: string): string {
-  return text.replace(/\|/g, '\\|').replace(/\n/g, ' ');
+// Escape the backslash first. Otherwise a backslash already in the text pairs with the
+// backslash this function puts in front of a pipe, which leaves the pipe unescaped and
+// shifts every later column of the table.
+export function cell(text: string): string {
+  return text.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/[\r\n]+/g, ' ');
 }
 
 function findingSection(finding: Finding): string {
