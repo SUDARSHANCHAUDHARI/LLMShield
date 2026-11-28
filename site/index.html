@@ -30,13 +30,14 @@
         <a class="button" href="https://github.com/SUDARSHANCHAUDHARI/LLMShield#quick-start-no-api-key">Run the CLI</a>
       </div>
 
-      <pre class="terminal" aria-label="Example CLI run"><span class="prompt">$ </span>pnpm dev scan --file examples/system-prompt.txt --provider mock-leaky --fail-on high
-Report written to reports/demo.md
-Risk: <span class="bad">critical</span>
-Score: 100
-Attacks: 27
-Findings: 27
-<span class="bad">Failing: risk critical is at or above --fail-on high</span></pre>
+      <!-- Recorded from docs/demo.tape and copied here by pnpm build:site, so the page cannot
+           drift from the command it claims to show. The alt text carries the whole result: a
+           reader who never sees the GIF still learns what the two scans return. -->
+      <img class="demo" src="demo.gif"
+           alt="Two scans of the same system prompt. Against mock-leaky, a deliberately weak model: risk critical, score 100, 27 attacks, 27 findings, and the command exits 1 because that is at or above the --fail-on high threshold. Against mock, which always refuses: risk secure, score 0, 27 attacks, 0 findings, exit 0."
+           width="1200" height="430" loading="eager" decoding="async">
+
+      <pre class="terminal" aria-label="The command in the recording, to copy"><span class="prompt">$ </span>pnpm dev scan --file examples/system-prompt.txt --provider mock-leaky --fail-on high</pre>
     </div>
 
     <section>
