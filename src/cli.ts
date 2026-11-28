@@ -126,11 +126,11 @@ program
   .command('providers')
   .description('List supported providers')
   .action(() => {
-    logger.info('mock         always refuses (expect: secure)');
-    logger.info('mock-leaky   deliberately weak model for demos (expect: critical)');
-    logger.info('openrouter');
-    logger.info('openai planned');
-    logger.info('anthropic planned');
+    logger.info('mock         always refuses, no key needed (expect: secure)');
+    logger.info('mock-leaky   deliberately weak model for demos, no key needed (expect: critical)');
+    logger.info('openrouter   OPENROUTER_API_KEY, any model OpenRouter routes');
+    logger.info('openai       OPENAI_API_KEY, Chat Completions');
+    logger.info('anthropic    ANTHROPIC_API_KEY, Messages API');
   });
 
 // Exit codes are the CLI's contract:

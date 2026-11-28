@@ -70,6 +70,30 @@ LLMSHIELD_MODEL=openai/gpt-4o-mini
 pnpm dev scan --file path/to/your-system-prompt.txt --provider openrouter --model openai/gpt-4o-mini --format markdown --output reports/result.md
 ```
 
+For OpenAI directly (Chat Completions):
+
+```bash
+OPENAI_API_KEY=your_key_here
+```
+
+```bash
+pnpm dev scan --file path/to/your-system-prompt.txt --provider openai --model gpt-4o-mini
+```
+
+For Claude directly (Messages API):
+
+```bash
+ANTHROPIC_API_KEY=your_key_here
+```
+
+```bash
+pnpm dev scan --file path/to/your-system-prompt.txt --provider anthropic --model claude-opus-5-5
+```
+
+Scan on the provider you actually ship on. A routed proxy is close but not identical: the
+system-prompt handling and the safety behaviour you are testing belong to the provider serving
+the model.
+
 ## How detection works
 
 Every check is deterministic: no second model judges the replies, so the same reply always gets the same score.
@@ -185,9 +209,8 @@ promptfoo and garak are broader evaluation and red-teaming frameworks, with many
 
 1. Publish to npm (`@sudarshanchaudhari/llmshield`) and add a GitHub Action
 2. Add multi-turn attack runner
-3. Add OpenAI and Anthropic providers
-4. Add RAG prompt injection tests
-5. Optional model-judged check for paraphrased leaks
+3. Add RAG prompt injection tests
+4. Optional model-judged check for paraphrased leaks
 
 ## Verification
 
