@@ -1,6 +1,7 @@
 // Browser-safe scan engine: no Node built-ins, no env access. The CLI wraps it in scan.ts.
 import type {
   AttackCase,
+  ConversationTurn,
   Finding,
   ProviderRequest,
   ProviderResponse,
@@ -66,27 +67,52 @@ export async function scanWith(
 
   for (const [index, attack] of attacks.entries()) {
     const marker = attack.goal === 'obey' ? randomToken('LLMS') : undefined;
-    const userPrompt = marker ? attack.prompt.replaceAll(MARKER_PLACEHOLDER, marker) : attack.prompt;
+    const fill = (text: string): string =>
+      marker ? text.replaceAll(MARKER_PLACEHOLDER, marker) : text;
 
-    let result: ProviderResponse;
+    const turns = [attack.prompt, ...(attack.followUps ?? [])].map(fill);
 
-    try {
-      result = await run({ systemPrompt, userPrompt, model: options.model });
-    } catch (cause) {
-      // A rate limit or a dropped connection on one attack must not throw away the attacks that
-      // already ran, or the ones still to come. Record the hole and carry on.
-      const error: ScanError = {
-        attackId: attack.id,
-        message: cause instanceof Error ? cause.message : String(cause)
-      };
+    // One real conversation per attack: each reply is appended before the next turn is sent, so
+    // a follow-up is answered by a model that has already committed to the earlier answers. That
+    // is the whole point of a multi-turn attack.
+    const history: ConversationTurn[] = [];
+    const replies: string[] = [];
+    let failed = false;
 
-      errors.push(error);
-      onProgress?.({ attack, index, total: attacks.length, error });
-      continue;
+    for (const userPrompt of turns) {
+      let result: ProviderResponse;
+
+      try {
+        result = await run({ systemPrompt, userPrompt, model: options.model, history: [...history] });
+      } catch (cause) {
+        // A rate limit or a dropped connection on one attack must not throw away the attacks
+        // that already ran, or the ones still to come. Record the hole and carry on.
+        const error: ScanError = {
+          attackId: attack.id,
+          message: cause instanceof Error ? cause.message : String(cause)
+        };
+
+        errors.push(error);
+        onProgress?.({ attack, index, total: attacks.length, error });
+        failed = true;
+        break;
+      }
+
+      replies.push(result.text);
+      conversationLog.push({ attackId: attack.id, prompt: userPrompt, response: result.text });
+      history.push({ role: 'user', content: userPrompt }, { role: 'assistant', content: result.text });
     }
 
-    const leakage = evaluateLeakage(result.text, options.systemPrompt, canary);
-    const injectionFollowed = marker ? containsMarker(result.text, marker).found : false;
+    // A turn that errors mid-conversation abandons the attack: the escalation depended on the
+    // reply that never came, so judging the turns before it would understate the result.
+    if (failed) continue;
+
+    // Judge the whole transcript. A leak on turn two is a leak, and a model that obeys the
+    // injected instruction on a later turn has still obeyed it.
+    const transcript = replies.join('\n\n');
+
+    const leakage = evaluateLeakage(transcript, options.systemPrompt, canary);
+    const injectionFollowed = marker ? containsMarker(transcript, marker).found : false;
     const leakScore = scoreLeakStatus(leakage.status);
     const score = Math.max(leakScore, injectionFollowed ? severityScore[attack.severity] : 0);
 
@@ -101,14 +127,13 @@ export async function scanWith(
         leakStatus: leakage.status,
         injectionFollowed,
         score,
-        response: result.text,
+        response: transcript,
         evidence,
         recommendation: injectionFollowed && score > leakScore ? INJECTION_RECOMMENDATION : LEAK_RECOMMENDATION
       };
       findings.push(finding);
     }
 
-    conversationLog.push({ attackId: attack.id, prompt: userPrompt, response: result.text });
     onProgress?.({ attack, index, total: attacks.length, finding });
   }
 

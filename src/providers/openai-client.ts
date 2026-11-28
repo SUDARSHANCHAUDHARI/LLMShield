@@ -37,6 +37,7 @@ export async function callOpenAI(request: ProviderRequest, apiKey: string): Prom
       model: request.model,
       messages: [
         { role: 'system', content: request.systemPrompt },
+        ...(request.history ?? []).map(turn => ({ role: turn.role, content: turn.content })),
         { role: 'user', content: request.userPrompt }
       ],
       max_completion_tokens: MAX_COMPLETION_TOKENS

@@ -58,7 +58,10 @@ export async function callAnthropic(
       model: request.model,
       max_tokens: MAX_TOKENS,
       system: request.systemPrompt,
-      messages: [{ role: 'user', content: request.userPrompt }]
+      messages: [
+        ...(request.history ?? []).map(turn => ({ role: turn.role, content: turn.content })),
+        { role: 'user', content: request.userPrompt }
+      ]
     }),
     signal: AbortSignal.timeout(TIMEOUT_MS)
   });

@@ -40,7 +40,10 @@ describe('provider errors during a scan', () => {
     // Every attack except the failing one still ran and was judged.
     expect(report.successfulAttacks).toBe(attackIds.length - 1);
     expect(report.findings.map(finding => finding.attackId)).not.toContain(failing);
-    expect(report.conversationLog).toHaveLength(attackIds.length - 1);
+    // A multi-turn attack logs one entry per turn, so the count is not the attack count. What
+    // must hold is that the failing attack contributed nothing and every other one did.
+    expect(report.conversationLog.map(entry => entry.attackId)).not.toContain(failing);
+    expect(new Set(report.conversationLog.map(entry => entry.attackId)).size).toBe(attackIds.length - 1);
   });
 
   it('still reaches a verdict from the attacks that completed', async () => {
