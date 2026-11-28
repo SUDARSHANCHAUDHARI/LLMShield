@@ -27,9 +27,16 @@ describe('the registry', () => {
     expect(multiTurn.length).toBeGreaterThan(0);
   });
 
-  it('only puts follow-ups on multi-turn attacks', () => {
-    for (const attack of multiTurn) {
-      expect(attack.category, attack.id).toBe('multi-turn');
+  // Follow-up turns are a mechanism, not a category: an indirect-injection attack that plants a
+  // document on one turn and asks a question on the next is multi-turn in shape but belongs in
+  // 'rag'. What must hold is that every multi-turn attack actually uses more than one turn.
+  it('gives every attack in the multi-turn category at least one follow-up', () => {
+    const inCategory = registry.filter(attack => attack.category === 'multi-turn');
+
+    expect(inCategory.length).toBeGreaterThan(0);
+
+    for (const attack of inCategory) {
+      expect(attack.followUps?.length ?? 0, attack.id).toBeGreaterThan(0);
     }
   });
 

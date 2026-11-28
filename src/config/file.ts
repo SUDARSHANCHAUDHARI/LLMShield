@@ -26,7 +26,8 @@ export const categoryNames = [
   'jailbreak',
   'roleplay',
   'encoding',
-  'multi-turn'
+  'multi-turn',
+  'rag'
 ] as const satisfies readonly AttackCategory[];
 
 /** Everything a config file may set. Each key mirrors the flag of the same name. */
