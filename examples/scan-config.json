@@ -1,12 +1,9 @@
 {
-  "provider": "mock",
-  "model": "mock-safe-model",
-  "categories": [
-    "direct-extraction",
-    "prompt-injection",
-    "jailbreak",
-    "roleplay",
-    "encoding",
-    "multi-turn"
-  ]
+  "provider": "mock-leaky",
+  "model": "openai/gpt-4o-mini",
+  "categories": ["direct-extraction", "prompt-injection", "jailbreak", "encoding"],
+  "failOn": "high",
+  "format": "markdown",
+  "output": "reports/scan.md",
+  "canary": true
 }
