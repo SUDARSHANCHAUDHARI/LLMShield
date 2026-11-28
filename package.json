@@ -49,11 +49,15 @@
     "@types/node": "^22.20.5",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "vitest": "^2.1.9"
+    "vite": "^7.3.8",
+    "vitest": "^4.1.12"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
-    ]
+    ],
+    "overrides": {
+      "postcss": "8.5.33"
+    }
   }
 }
