@@ -6,5 +6,8 @@ export type { ProviderFn, ScanProgress } from './scanner/core.js';
 export { getAttackRegistry } from './attacks/registry.js';
 export { runMockSafe, runMockLeaky } from './providers/mock.js';
 export { callOpenRouter } from './providers/openrouter-client.js';
+export { callOpenAI } from './providers/openai-client.js';
+export { callAnthropic } from './providers/anthropic-client.js';
+export type { AnthropicCallOptions } from './providers/anthropic-client.js';
 export { toJsonReport } from './reports/json.js';
 export { toMarkdownReport } from './reports/markdown.js';
