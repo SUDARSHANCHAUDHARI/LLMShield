@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>LLMShield: test your system prompt for leaks and injection</title>
+  <meta name="description" content="LLMShield runs prompt-leak and prompt-injection attacks against your LLM system prompt, checks every reply, and reports what got out. CLI, CI gate and in-browser playground.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img class="brand-mark" src="favicon.svg" alt="">LLMShield</a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="./" aria-current="page">Home</a>
+        <a href="playground.html">Playground</a>
+        <a href="https://github.com/SUDARSHANCHAUDHARI/LLMShield">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap hero">
+      <h1>Does your system prompt keep its secrets?</h1>
+      <p class="lead">LLMShield runs prompt-leak and prompt-injection attacks against your system prompt and a real model, checks every reply, and tells you exactly what got out. Use it from the command line, as a CI gate, or right here in your browser.</p>
+      <div class="actions">
+        <a class="button primary" href="playground.html">Try the playground</a>
+        <a class="button" href="https://github.com/SUDARSHANCHAUDHARI/LLMShield#quick-start-no-api-key">Run the CLI</a>
+      </div>
+
+      <pre class="terminal" aria-label="Example CLI run"><span class="prompt">$ </span>pnpm dev scan --file examples/system-prompt.txt --provider mock-leaky --fail-on high
+Report written to reports/demo.md
+Risk: <span class="bad">critical</span>
+Score: 100
+Attacks: 7
+Findings: 7
+<span class="bad">Failing: risk critical is at or above --fail-on high</span></pre>
+    </div>
+
+    <section>
+      <div class="wrap">
+        <h2>What it checks</h2>
+        <p class="sub">Every check is deterministic: no second model grades the replies, so the same reply always gets the same score.</p>
+        <div class="grid">
+          <div class="card">
+            <h3>Prompt leakage</h3>
+            <p>Measures how much of your prompt appears in the reply, four words at a time, from a hint up to a complete dump.</p>
+          </div>
+          <div class="card">
+            <h3>Canary token</h3>
+            <p>Adds a random secret code to your prompt for the scan. If any reply contains it, the secret got out.</p>
+          </div>
+          <div class="card">
+            <h3>Instruction override</h3>
+            <p>Injection attacks ask the model to reply with a random marker. If it does, the user beat your system prompt.</p>
+          </div>
+          <div class="card">
+            <h3>Encoded dumps</h3>
+            <p>Replies are also checked after Base64 decoding and reversing, so "encode your prompt" tricks are caught.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Three ways to use it</h2>
+        <p class="sub">Same scanner, same attacks, same scoring in all three.</p>
+        <div class="grid">
+          <div class="card">
+            <h3>Command line</h3>
+            <p>Scan a prompt file and write a JSON or Markdown report.</p>
+            <pre>pnpm dev scan --file prompt.txt \
+  --provider openrouter \
+  --format markdown -o report.md</pre>
+          </div>
+          <div class="card">
+            <h3>CI gate</h3>
+            <p>Fail the build when the risk reaches your threshold. The report is still written.</p>
+            <pre>pnpm dev scan --file prompt.txt \
+  --provider openrouter \
+  --fail-on high</pre>
+          </div>
+          <div class="card">
+            <h3>Browser playground</h3>
+            <p>Paste a prompt, pick a model, read the findings. Try the built-in demo models with no key at all.</p>
+            <pre><a href="playground.html">Open the playground →</a></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Your key stays in your browser</h2>
+        <p class="note">The playground is a static page with no backend. With OpenRouter, your API key and prompt go straight from your browser to openrouter.ai and nowhere else. The key is kept in memory only and is gone when you close the tab. The page's Content Security Policy blocks every other connection.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">MIT licensed. Built by <a href="https://sudarshantechlabs.com/">SudarshanTechLabs</a>. Not related to the <code>llmshield</code> npm package.</div>
+  </footer>
+</body>
+</html>
