@@ -97,6 +97,14 @@ export interface ScanOptions {
   includeCategories?: AttackCategory[];
   /** Append a random canary token to the system prompt to detect disclosure. Default true. */
   canary?: boolean;
+  /**
+   * Model to ask whether a reply paraphrases the system prompt, for the leaks n-gram overlap
+   * cannot see. Off unless set: every other check is deterministic, and this one is not.
+   *
+   * Only consulted when the deterministic checks found nothing, so it can raise a verdict but
+   * never lower one. The judge model is sent the system prompt and the reply.
+   */
+  judgeModel?: string;
 }
 
 export interface ScanReport {

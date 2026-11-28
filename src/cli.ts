@@ -41,6 +41,10 @@ program
     `Only run attacks in these categories, repeated or comma-separated: ${categoryNames.join(', ')}`
   )
   .option('--config <path>', 'Read provider, model, categories and report settings from a JSON file')
+  .option(
+    '--judge-model <model>',
+    'Opt in to a model-judged paraphrase check. Off by default: it is not deterministic, it costs tokens, and the judge model is sent your system prompt'
+  )
   .action(async (options, command) => {
     const config: ScanConfigFile = options.config ? await readScanConfig(options.config) : {};
 
@@ -57,6 +61,7 @@ program
     const model = settle('model', options.model, config.model);
     const output = settle('output', options.output, config.output);
     const canary = settle('canary', options.canary, config.canary);
+    const judgeModel = settle('judgeModel', options.judgeModel, config.judgeModel);
 
     const categories = options.category
       ? parseCategoryList('--category', options.category as unknown[])
@@ -75,7 +80,8 @@ program
       model: provider.startsWith('mock') ? provider : model,
       output,
       includeCategories: categories,
-      canary
+      canary,
+      judgeModel
     });
 
     const rendered = formatReport(report, reportFormat);

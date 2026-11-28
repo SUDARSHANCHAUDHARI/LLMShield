@@ -39,9 +39,19 @@ export interface ScanConfigFile {
   format?: ReportFormat;
   output?: string;
   canary?: boolean;
+  judgeModel?: string;
 }
 
-const KNOWN_KEYS = ['provider', 'model', 'categories', 'failOn', 'format', 'output', 'canary'] as const;
+const KNOWN_KEYS = [
+  'provider',
+  'model',
+  'categories',
+  'failOn',
+  'format',
+  'output',
+  'canary',
+  'judgeModel'
+] as const;
 
 /**
  * Turns the parsed JSON of a config file into a ScanConfigFile, or throws.
@@ -77,6 +87,10 @@ export function parseScanConfig(raw: unknown, path: string): ScanConfigFile {
 
   if (entries.output !== undefined) {
     config.output = requireString('output', entries.output, path);
+  }
+
+  if (entries.judgeModel !== undefined) {
+    config.judgeModel = requireString('judgeModel', entries.judgeModel, path);
   }
 
   if (entries.format !== undefined) {
