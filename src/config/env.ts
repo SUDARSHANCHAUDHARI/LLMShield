@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 export const env = {
   openRouterApiKey: process.env.OPENROUTER_API_KEY ?? '',
