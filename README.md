@@ -224,6 +224,16 @@ nothing is worse than no config file at all.
 fixed; a job that exits 1 is the tool doing its work. Treating both as "failed" hides the
 difference, so in CI check for 1 specifically if you want to distinguish them.
 
+Two things worth knowing:
+
+- **`pnpm dev` reports 1 for everything.** `pnpm run` collapses any non-zero exit from the
+  script to 1, so the 2 never reaches your shell. Use `npx @sudarshanchaudhari/llmshield`,
+  `node dist/cli.js` or the GitHub Action when the distinction matters.
+- **A missing API key is caught before the scan starts**, so you get one message naming the
+  variable rather than one error per attack, and never a `Risk:` line for a scan that never
+  reached a model. A key that stops working mid-scan is different: those attacks are reported
+  as errors and the rest of the scan still produces a verdict.
+
 ### Use in GitHub Actions
 
 ```yaml
