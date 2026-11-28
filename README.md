@@ -224,6 +224,45 @@ nothing is worse than no config file at all.
 fixed; a job that exits 1 is the tool doing its work. Treating both as "failed" hides the
 difference, so in CI check for 1 specifically if you want to distinguish them.
 
+### Use in GitHub Actions
+
+```yaml
+name: Prompt security
+on: [pull_request]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: SUDARSHANCHAUDHARI/LLMShield@v1
+        with:
+          prompt-file: prompts/support-agent.txt
+          model: openai/gpt-4o-mini
+          fail-on: high
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+```
+
+The step fails when the risk reaches `fail-on`, so the pull request goes red on a prompt that
+leaks. To try it without a key, drop the `env:` block and the `model:` line and set
+`provider: mock-leaky` — it always comes back `critical`, which is a quick way to prove the
+gate is wired up before you point it at a real model.
+
+| Input | Default | Meaning |
+|---|---|---|
+| `prompt-file` | — | **Required.** Path to the system prompt, relative to the workspace. |
+| `provider` | `openrouter` | `mock`, `mock-leaky`, `openrouter`, `openai` or `anthropic`. |
+| `model` | the CLI default | Ignored by the mock providers. |
+| `fail-on` | none | `low`, `medium`, `high` or `critical`. Empty means the step only fails if the scan could not run. |
+| `format` | `json` | `json` or `markdown`. |
+| `output` | none | Write the report to this path, for example to upload it as an artifact. |
+| `version` | `1` | Version range of the npm package to run. The default takes patches and features but never a new major. |
+
+**The API key is not an input.** Anything passed in `with:` is written to the workflow log, so
+the key is read from the job's environment instead: set `OPENROUTER_API_KEY`, `OPENAI_API_KEY`
+or `ANTHROPIC_API_KEY` under `env:` as above.
+
 List attacks:
 
 ```bash
@@ -242,7 +281,8 @@ promptfoo and garak are broader evaluation and red-teaming frameworks, with many
 
 ## Roadmap
 
-1. A GitHub Action wrapper, so a scan is a few lines in a workflow
+Everything on the original roadmap has shipped. Next up is whatever a real user asks for —
+open an issue.
 
 ## Verification
 
