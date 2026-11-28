@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -103,6 +104,12 @@ describe('exit codes', () => {
 
     expect(help.code).toBe(0);
     expect(version.code).toBe(0);
-    expect(version.output.trim()).toBe('0.1.0');
+    // Read from the manifest, not pinned to a literal: semantic-release sets the version at
+    // publish time, so a literal here would fail on every release.
+    const manifest = JSON.parse(readFileSync(path.join(repoRoot, 'package.json'), 'utf8')) as {
+      version: string;
+    };
+    expect(version.output.trim()).toBe(manifest.version);
+    expect(version.output.trim()).not.toBe('unknown');
   }, 30_000);
 });

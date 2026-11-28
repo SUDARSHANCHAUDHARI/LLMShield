@@ -37,7 +37,9 @@
            alt="Two scans of the same system prompt. Against mock-leaky, a deliberately weak model: risk critical, score 100, 27 attacks, 27 findings, and the command exits 1 because that is at or above the --fail-on high threshold. Against mock, which always refuses: risk secure, score 0, 27 attacks, 0 findings, exit 0."
            width="1200" height="430" loading="eager" decoding="async">
 
-      <pre class="terminal" aria-label="The command in the recording, to copy"><span class="prompt">$ </span>pnpm dev scan --file examples/system-prompt.txt --provider mock-leaky --fail-on high</pre>
+      <!-- The recording runs from a clone, so it shows pnpm dev. This is the same scan for
+           someone who has not cloned anything, which is what publishing to npm buys. -->
+      <pre class="terminal" aria-label="The same scan, without cloning the repo"><span class="prompt">$ </span>npx @sudarshanchaudhari/llmshield scan --file prompt.txt --provider mock-leaky --fail-on high</pre>
     </div>
 
     <section>
@@ -73,15 +75,15 @@
           <div class="card">
             <h3>Command line</h3>
             <p>Scan a prompt file and write a JSON or Markdown report.</p>
-            <pre>pnpm dev scan --file prompt.txt \
-  --provider openrouter \
+            <pre>npx @sudarshanchaudhari/llmshield scan \
+  --file prompt.txt --provider openrouter \
   --format markdown -o report.md</pre>
           </div>
           <div class="card">
             <h3>CI gate</h3>
             <p>Fail the build when the risk reaches your threshold. The report is still written.</p>
-            <pre>pnpm dev scan --file prompt.txt \
-  --provider openrouter \
+            <pre>npx @sudarshanchaudhari/llmshield scan \
+  --file prompt.txt --provider openrouter \
   --fail-on high</pre>
           </div>
           <div class="card">

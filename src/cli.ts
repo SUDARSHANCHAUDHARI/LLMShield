@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs';
 import { Command, CommanderError } from 'commander';
 import { env } from './config/env.js';
 import { runScan } from './scanner/scan.js';
@@ -18,12 +19,37 @@ import {
 } from './config/file.js';
 import { meetsThreshold } from './scanner/score.js';
 
+/**
+ * The version of the installed package.
+ *
+ * Not a literal: semantic-release sets the version in package.json when it publishes and does
+ * not commit it back, so package.json on main stays behind the tags. A hardcoded string here
+ * would report that stale number from every published build. Both `dist/cli.js` and
+ * `src/cli.ts` sit one directory below the manifest, so one path covers the built CLI and
+ * `pnpm dev`.
+ */
+function packageVersion(): string {
+  try {
+    const manifest: unknown = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+
+    if (typeof manifest === 'object' && manifest !== null && 'version' in manifest) {
+      const { version } = manifest as { version: unknown };
+      if (typeof version === 'string') return version;
+    }
+
+    return 'unknown';
+  } catch {
+    // --version must not be the one command that crashes.
+    return 'unknown';
+  }
+}
+
 const program = new Command();
 
 program
   .name('llmshield')
   .description('LLM prompt security scanner')
-  .version('0.1.0');
+  .version(packageVersion());
 
 program
   .command('scan')
