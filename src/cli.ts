@@ -1,18 +1,31 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { z } from 'zod';
 import { env } from './config/env.js';
 import { runScan } from './scanner/scan.js';
 import { getAttackRegistry } from './attacks/registry.js';
 import { readTextFile, writeTextFile } from './utils/file.js';
-import { formatReport } from './reports/format.js';
+import { formatReport, type ReportFormat } from './reports/format.js';
 import { logger } from './utils/logger.js';
+import { oneOf, optionalOneOf } from './utils/choice.js';
 import { meetsThreshold } from './scanner/score.js';
-import type { ProviderName } from './types.js';
+import type { ProviderName, RiskLevel } from './types.js';
 
-const providerSchema = z.enum(['mock', 'mock-leaky', 'openrouter', 'openai', 'anthropic']);
-const reportFormatSchema = z.enum(['json', 'markdown']);
-const failOnSchema = z.enum(['low', 'medium', 'high', 'critical']).optional();
+const providerNames = [
+  'mock',
+  'mock-leaky',
+  'openrouter',
+  'openai',
+  'anthropic'
+] as const satisfies readonly ProviderName[];
+
+const reportFormats = ['json', 'markdown'] as const satisfies readonly ReportFormat[];
+
+const failOnLevels = [
+  'low',
+  'medium',
+  'high',
+  'critical'
+] as const satisfies readonly Exclude<RiskLevel, 'secure'>[];
 
 const program = new Command();
 
@@ -33,9 +46,9 @@ program
   .option('--no-canary', 'Do not append a canary token to the system prompt')
   .option('--fail-on <risk>', 'Exit with code 1 if overall risk is at or above: low, medium, high, critical')
   .action(async options => {
-    const provider = providerSchema.parse(options.provider) as ProviderName;
-    const reportFormat = reportFormatSchema.parse(options.format);
-    const failOn = failOnSchema.parse(options.failOn);
+    const provider = oneOf('--provider', options.provider, providerNames);
+    const reportFormat = oneOf('--format', options.format, reportFormats);
+    const failOn = optionalOneOf('--fail-on', options.failOn, failOnLevels);
     const systemPrompt = options.file ? await readTextFile(options.file) : options.prompt;
 
     if (!systemPrompt) {
