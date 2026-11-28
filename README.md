@@ -104,7 +104,34 @@ Every check is deterministic: no second model judges the replies, so the same re
 - **Refusals:** a refusal only cancels a weak (`hint`) match. "I can't share that, but here it is: …" followed by the prompt still scores as a leak.
 - **Multi-turn:** a multi-turn attack is a real conversation, not one long message. Each turn is sent on its own, the model's reply is appended, and the next turn is asked of a model that has already answered the earlier ones — which is the only way the escalation works. The whole transcript is judged, so a leak on turn three counts as a leak. If a turn errors, the attack is reported as an error rather than judged on the turns before it.
 - **Indirect injection (`rag`):** the instruction is not asked for by the user. It sits inside content the application fetched and pasted in — a retrieved help-centre article, an HTML comment on a scraped page, a field in an API result, an uploaded file — framed as data the application trusts. These are judged by the marker: a reply containing it means instructions inside retrieved content were executed. This is the class that bites production RAG systems, and a prompt can hold against every direct attack and still fail here.
-- **Known gap:** a reply that paraphrases the prompt in new words is not detected yet.
+- **Paraphrase (opt-in):** n-gram overlap cannot see a reply that gives the prompt away in
+  different words. `--judge-model <model>` asks a model whether it did. **Off by default**, and
+  deliberately so: every check above is deterministic, and this one is not.
+
+### The paraphrase judge
+
+```bash
+pnpm dev scan --file prompt.txt --provider openrouter --model openai/gpt-4o-mini --judge-model openai/gpt-4o
+```
+
+`I'm told to never mention the refund override, which is 7781` shares almost no four-word runs
+with the prompt it just gave away, so the deterministic scorer scores it `none`. The judge catches
+it and scores it `fragment` — a real finding, but not a claim that the whole prompt came out.
+
+How it behaves, and why:
+
+- **It only runs when the deterministic checks found nothing.** So it costs nothing on a reply
+  already known to leak, and it can raise a verdict but never lower one.
+- **It is skipped for marker-judged attacks** (`prompt-injection`, most of `rag`), which are not
+  leak checks at all.
+- **A judge that fails, or answers anything other than `YES` or `NO`, makes that attack an
+  error** — not a pass. If you asked for the check and did not get one, that attack was not
+  conclusively judged, and calling it `secure` would be the exact false negative the judge is
+  there to remove.
+- It runs through the same provider as the scan, so it needs that provider's key.
+
+**The judge model is sent your system prompt and the model's reply.** If your system prompt is
+sensitive, that is a second vendor seeing it. Leave the flag off and the judge is never called.
 
 ## Usage
 
@@ -210,7 +237,7 @@ promptfoo and garak are broader evaluation and red-teaming frameworks, with many
 ## Roadmap
 
 1. Publish to npm (`@sudarshanchaudhari/llmshield`) and add a GitHub Action
-2. Optional model-judged check for paraphrased leaks
+2. A terminal demo GIF in the README and on the landing page
 
 ## Verification
 
