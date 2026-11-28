@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "tsx src/cli.ts",
     "build": "rm -rf dist && tsc",
-    "build:site": "pnpm build && rm -rf _site && cp -R site _site && cp -R dist _site/lib",
+    "build:site": "pnpm build && rm -rf _site && cp -R site _site && cp -R dist _site/lib && cp docs/demo.gif _site/demo.gif",
     "start": "node dist/cli.js",
     "test": "vitest run",
     "scan:example": "tsx src/cli.ts scan --file examples/system-prompt.txt --provider mock"

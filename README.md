@@ -4,6 +4,8 @@ Find out whether your LLM system prompt leaks, or can be overridden, before your
 
 **Try it in your browser:** [sudarshanchaudhari.github.io/LLMShield](https://sudarshanchaudhari.github.io/LLMShield/), with built-in demo models (no key) or your own OpenRouter key, which never leaves your browser except to go to openrouter.ai.
 
+![LLMShield scanning a system prompt: the mock-leaky provider comes back critical and exits 1, the refusing mock provider comes back secure and exits 0](docs/demo.gif)
+
 > Not related to the `llmshield` package on npm, which is an LLM cost tool.
 
 ## Table of Contents
@@ -250,6 +252,7 @@ pnpm build
 
 ```text
 site/           GitHub Pages landing page and playground (pnpm build:site → _site/)
+docs/           demo.tape and the demo.gif it records (vhs docs/demo.tape, needs vhs)
 examples/       sample system prompt and sample reports
 src/
   cli.ts        the llmshield command
