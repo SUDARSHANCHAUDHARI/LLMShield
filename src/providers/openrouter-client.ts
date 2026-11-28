@@ -19,6 +19,7 @@ export async function callOpenRouter(request: ProviderRequest, apiKey: string): 
       model: request.model,
       messages: [
         { role: 'system', content: request.systemPrompt },
+        ...(request.history ?? []).map(turn => ({ role: turn.role, content: turn.content })),
         { role: 'user', content: request.userPrompt }
       ]
     }),
