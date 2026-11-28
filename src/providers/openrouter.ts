@@ -18,7 +18,8 @@ export async function runOpenRouter(request: ProviderRequest): Promise<ProviderR
         { role: 'system', content: request.systemPrompt },
         { role: 'user', content: request.userPrompt }
       ]
-    })
+    }),
+    signal: AbortSignal.timeout(60_000)
   });
 
   if (!response.ok) {
