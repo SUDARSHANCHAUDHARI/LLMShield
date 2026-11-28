@@ -10,7 +10,7 @@ import { logger } from './utils/logger.js';
 import { meetsThreshold } from './scanner/score.js';
 import type { ProviderName } from './types.js';
 
-const providerSchema = z.enum(['mock', 'openrouter', 'openai', 'anthropic']);
+const providerSchema = z.enum(['mock', 'mock-leaky', 'openrouter', 'openai', 'anthropic']);
 const reportFormatSchema = z.enum(['json', 'markdown']);
 const failOnSchema = z.enum(['low', 'medium', 'high', 'critical']).optional();
 
@@ -26,7 +26,7 @@ program
   .description('Scan a system prompt for prompt leak and injection risks')
   .option('-f, --file <path>', 'Path to system prompt file')
   .option('-p, --prompt <prompt>', 'System prompt text')
-  .option('--provider <provider>', 'Provider: mock, openrouter, openai, anthropic', env.defaultProvider)
+  .option('--provider <provider>', 'Provider: mock, mock-leaky, openrouter, openai, anthropic', env.defaultProvider)
   .option('-m, --model <model>', 'Model name', env.defaultModel)
   .option('--format <format>', 'Report format: json, markdown', 'json')
   .option('-o, --output <path>', 'Write report to file')
@@ -45,7 +45,8 @@ program
     const report = await runScan({
       systemPrompt,
       provider,
-      model: options.model,
+      // Mock providers ignore the model; report the provider name instead of a misleading default.
+      model: provider.startsWith('mock') ? provider : options.model,
       output: options.output,
       canary: options.canary
     });
@@ -81,7 +82,8 @@ program
   .command('providers')
   .description('List supported providers')
   .action(() => {
-    logger.info('mock');
+    logger.info('mock         always refuses (expect: secure)');
+    logger.info('mock-leaky   deliberately weak model for demos (expect: critical)');
     logger.info('openrouter');
     logger.info('openai planned');
     logger.info('anthropic planned');

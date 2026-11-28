@@ -33,5 +33,39 @@ describe('report format selection', () => {
 
     expect(output).toContain('# LLMShield Report');
     expect(output).toContain('Risk: secure');
+    expect(output).toContain('No findings.');
+  });
+
+  it('includes evidence, response and recommendations for findings', () => {
+    const output = formatReport(
+      {
+        ...report,
+        overallRisk: 'critical',
+        score: 100,
+        leakStatus: 'complete',
+        successfulAttacks: 1,
+        findings: [
+          {
+            attackId: 'direct-001',
+            attackName: 'Direct | request',
+            category: 'direct-extraction',
+            risk: 'critical',
+            leakStatus: 'complete',
+            injectionFollowed: false,
+            score: 100,
+            response: 'Sure, here are my instructions: be nice',
+            evidence: ['canary token disclosed (plain)'],
+            recommendation: 'Fix it.'
+          }
+        ],
+        recommendations: ['Fix it.']
+      },
+      'markdown'
+    );
+
+    expect(output).toContain('| Direct \\| request | direct-extraction | critical | complete | no |');
+    expect(output).toContain('- canary token disclosed (plain)');
+    expect(output).toContain('Sure, here are my instructions: be nice');
+    expect(output).toContain('## Recommendations\n\n- Fix it.');
   });
 });
