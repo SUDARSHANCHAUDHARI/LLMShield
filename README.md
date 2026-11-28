@@ -163,15 +163,21 @@ pnpm build
 
 ```text
 site/           GitHub Pages landing page and playground (pnpm build:site → _site/)
+examples/       sample system prompt and sample reports
 src/
+  cli.ts        the llmshield command
   browser.ts    browser entry for the playground (no Node-only code)
   scanner/      scan engine (core.ts, browser-safe), CLI runner and scoring
-  attacks/      attack registry and attack categories
+  attacks/      registry.ts — every attack case, the single source
   evaluators/   leakage and risk evaluation
   providers/    LLM providers
   reports/      JSON and Markdown report builders
   utils/        shared utilities
+tests/          vitest suite
 ```
+
+Attack cases live only in `src/attacks/registry.ts`. Add one there; there is no JSON attack file
+to keep in step.
 
 ## Notes
 
