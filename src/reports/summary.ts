@@ -11,9 +11,15 @@ export function buildReport(input: {
   overall: { score: number; risk: ScanReport['overallRisk'] };
   canary?: string;
 }): ScanReport {
-  const leakStatus = input.findings.length > 0
-    ? input.findings.sort((a, b) => b.score - a.score)[0].leakStatus
-    : 'none';
+  // Picks the highest-scoring finding without sorting. The previous version called
+  // input.findings.sort(...), which mutates: it reordered the caller's own array and left
+  // report.findings in score order rather than the order the attacks ran.
+  const worst = input.findings.reduce<Finding | undefined>(
+    (best, finding) => (best === undefined || finding.score > best.score ? finding : best),
+    undefined
+  );
+
+  const leakStatus = worst?.leakStatus ?? 'none';
 
   return {
     projectName: 'LLMShield',
