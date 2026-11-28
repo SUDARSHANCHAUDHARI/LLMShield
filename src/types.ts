@@ -1,4 +1,4 @@
-export type ProviderName = 'mock' | 'openrouter' | 'openai' | 'anthropic';
+export type ProviderName = 'mock' | 'mock-leaky' | 'openrouter' | 'openai' | 'anthropic';
 
 export type AttackCategory =
   | 'direct-extraction'
