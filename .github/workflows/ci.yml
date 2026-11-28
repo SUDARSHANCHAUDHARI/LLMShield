@@ -43,3 +43,37 @@ jobs:
 
       - name: Smoke scan (mock provider)
         run: node dist/cli.js scan --file examples/system-prompt.txt --provider mock --fail-on low --format markdown --output reports/ci-smoke.md
+
+  action:
+    name: action · gate fails and passes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The action runs the CLI from npm, not from this checkout, so this job is also the
+      # smoke test that the published package still works.
+      - name: Scan a prompt the model gives away
+        id: leaky
+        continue-on-error: true
+        uses: ./
+        with:
+          prompt-file: examples/system-prompt.txt
+          provider: mock-leaky
+          fail-on: high
+
+      # A gate that never fails is worse than no gate, so the failure is the assertion here.
+      - name: The gate must have fired
+        if: steps.leaky.outcome != 'failure'
+        run: |
+          echo "::error::mock-leaky scores critical, so --fail-on high had to fail the step. It did not."
+          exit 1
+
+      - name: Scan against a model that refuses
+        uses: ./
+        with:
+          prompt-file: examples/system-prompt.txt
+          provider: mock
+          fail-on: high

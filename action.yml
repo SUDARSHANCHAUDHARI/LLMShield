@@ -1,0 +1,81 @@
+name: LLMShield prompt scan
+description: Run prompt-leak and prompt-injection attacks against a system prompt and fail the build when the risk is too high.
+author: Sudarshan Kishor Chaudhari (SudarshanTechLabs)
+
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  prompt-file:
+    description: Path to the file holding the system prompt to scan, relative to the workspace.
+    required: true
+  provider:
+    description: 'Provider to scan against: mock, mock-leaky, openrouter, openai or anthropic. The mock providers need no key.'
+    required: false
+    default: openrouter
+  model:
+    description: Model name to send to the provider. Ignored by the mock providers. Defaults to whatever the CLI defaults to.
+    required: false
+    default: ''
+  fail-on:
+    description: 'Fail the step when the overall risk is at or above this level: low, medium, high or critical. Left empty, the step only fails if the scan itself could not run.'
+    required: false
+    default: ''
+  format:
+    description: 'Report format: json or markdown.'
+    required: false
+    default: json
+  output:
+    description: Write the report to this path. Left empty, the report is not written to a file and only the summary is printed.
+    required: false
+    default: ''
+  version:
+    description: Version range of @sudarshanchaudhari/llmshield to run. Defaults to the current major, so patches and features arrive without a change here, but a new major never does.
+    required: false
+    default: '1'
+
+runs:
+  using: composite
+  steps:
+    # Every input is passed through env rather than interpolated into the script. A value like
+    # `; rm -rf /` in an input would otherwise be executed by the runner, because GitHub
+    # substitutes ${{ }} into the script text before bash ever sees it.
+    - name: Scan the system prompt
+      shell: bash
+      env:
+        LLMSHIELD_VERSION: ${{ inputs.version }}
+        LLMSHIELD_PROMPT_FILE: ${{ inputs.prompt-file }}
+        LLMSHIELD_PROVIDER: ${{ inputs.provider }}
+        LLMSHIELD_MODEL: ${{ inputs.model }}
+        LLMSHIELD_FAIL_ON: ${{ inputs.fail-on }}
+        LLMSHIELD_FORMAT: ${{ inputs.format }}
+        LLMSHIELD_OUTPUT: ${{ inputs.output }}
+      run: |
+        set -euo pipefail
+
+        if [ ! -f "$LLMSHIELD_PROMPT_FILE" ]; then
+          echo "::error::prompt-file not found: $LLMSHIELD_PROMPT_FILE"
+          exit 2
+        fi
+
+        # Built as an array so an empty optional input contributes no argument at all. Passing
+        # `--model ""` would make the CLI scan with an empty model name instead of its default.
+        args=(scan --file "$LLMSHIELD_PROMPT_FILE" --provider "$LLMSHIELD_PROVIDER" --format "$LLMSHIELD_FORMAT")
+
+        if [ -n "$LLMSHIELD_MODEL" ]; then
+          args+=(--model "$LLMSHIELD_MODEL")
+        fi
+
+        if [ -n "$LLMSHIELD_FAIL_ON" ]; then
+          args+=(--fail-on "$LLMSHIELD_FAIL_ON")
+        fi
+
+        if [ -n "$LLMSHIELD_OUTPUT" ]; then
+          args+=(--output "$LLMSHIELD_OUTPUT")
+        fi
+
+        # The provider key is not an input. A key passed as an input would be written into the
+        # workflow log as part of the step's `with:` block; read from the job's env, it stays a
+        # secret. The CLI reads OPENROUTER_API_KEY, OPENAI_API_KEY or ANTHROPIC_API_KEY itself.
+        npx --yes "@sudarshanchaudhari/llmshield@$LLMSHIELD_VERSION" "${args[@]}"
