@@ -67,10 +67,28 @@ function renderAttackRows() {
   );
 }
 
-function markAttack(attackId, finding) {
+function markAttack(attackId, finding, error) {
   const row = attackList.querySelector(`[data-attack="${CSS.escape(attackId)}"]`);
   if (!row) return;
+  if (error) {
+    row.lastElementChild.replaceWith(el('span', { className: 'badge pending', text: 'error' }));
+    return;
+  }
   row.lastElementChild.replaceWith(finding ? badge(finding.risk) : el('span', { className: 'badge secure', text: 'held' }));
+}
+
+// An attack the model never answered is neither held nor a finding. Say so, so that "0 got
+// through" is not read as a clean bill of health.
+function errorPanels(report) {
+  if (report.errors.length === 0) return [];
+
+  return [
+    el('div', { className: 'finding' }, [
+      el('strong', { text: `${report.errors.length} of ${report.totalAttacks} attacks did not complete` }),
+      el('p', { text: 'These were neither held nor judged. Run the scan again to cover them.' }),
+      el('ul', {}, report.errors.map(error => el('li', { text: `${error.attackId}: ${error.message}` })))
+    ])
+  ];
 }
 
 function renderSummary(report) {
@@ -78,17 +96,30 @@ function renderSummary(report) {
     el('div', { className: 'stat' }, [badge(report.overallRisk), el('span', { className: 'label', text: 'overall risk' })]),
     el('div', { className: 'stat' }, [el('b', { text: String(report.score) }), el('span', { className: 'label', text: 'score / 100' })]),
     el('div', { className: 'stat' }, [el('b', { text: `${report.successfulAttacks} / ${report.totalAttacks}` }), el('span', { className: 'label', text: 'attacks got through' })]),
-    el('div', { className: 'stat' }, [el('b', { text: report.leakStatus }), el('span', { className: 'label', text: 'worst leak' })])
+    el('div', { className: 'stat' }, [el('b', { text: report.leakStatus }), el('span', { className: 'label', text: 'worst leak' })]),
+    ...(report.errors.length > 0
+      ? [el('div', { className: 'stat' }, [el('b', { text: String(report.errors.length) }), el('span', { className: 'label', text: 'did not complete' })])]
+      : [])
   );
   summary.hidden = false;
 }
 
 function renderFindings(report) {
   if (report.findings.length === 0) {
-    findingsBox.replaceChildren(el('p', { className: 'empty', text: 'No findings. Every attack was held.' }));
+    const held = report.totalAttacks - report.errors.length;
+    let message = 'No findings. Every attack was held.';
+
+    if (held === 0) {
+      message = 'No attack completed, so this is not a verdict.';
+    } else if (report.errors.length > 0) {
+      message = `No findings in the ${held} attack${held === 1 ? '' : 's'} that completed.`;
+    }
+
+    findingsBox.replaceChildren(el('p', { className: 'empty', text: message }), ...errorPanels(report));
     return;
   }
   findingsBox.replaceChildren(
+    ...errorPanels(report),
     ...report.findings.map(finding =>
       el('details', { className: 'finding' }, [
         el('summary', {}, [el('span', { text: finding.attackName }), badge(finding.risk)]),
@@ -143,7 +174,7 @@ form.addEventListener('submit', async event => {
     lastReport = await scanWith(
       { systemPrompt, provider, model, canary: $('canary').checked },
       providerFn(provider),
-      ({ attack, finding }) => markAttack(attack.id, finding)
+      ({ attack, finding, error }) => markAttack(attack.id, finding, error)
     );
     renderSummary(lastReport);
     renderFindings(lastReport);

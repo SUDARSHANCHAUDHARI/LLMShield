@@ -76,6 +76,23 @@ program
     logger.info(`Attacks: ${report.totalAttacks}`);
     logger.info(`Findings: ${report.successfulAttacks}`);
 
+    if (report.errors.length > 0) {
+      logger.error(`Errors: ${report.errors.length} of ${report.totalAttacks} attacks did not complete`);
+
+      for (const error of report.errors) {
+        logger.error(`  ${error.attackId}: ${error.message}`);
+      }
+    }
+
+    // Every attack failing is not a verdict, so it is a configuration error (2) rather than a
+    // clean pass (0) or a risk finding (1). A partial scan still produces a verdict and is
+    // judged on what it found.
+    if (report.totalAttacks > 0 && report.errors.length === report.totalAttacks) {
+      logger.error('No attack completed, so the scan produced no verdict.');
+      process.exitCode = 2;
+      return;
+    }
+
     if (failOn && meetsThreshold(report.overallRisk, failOn)) {
       logger.error(`Failing: risk ${report.overallRisk} is at or above --fail-on ${failOn}`);
       process.exitCode = 1;
