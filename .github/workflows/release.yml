@@ -12,8 +12,12 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-      # Required by npm trusted publishing, if NPM_TOKEN is ever replaced by OIDC.
-      id-token: write
+      # No id-token: write on purpose. Granting it makes @semantic-release/npm attempt npm
+      # trusted publishing before it falls back to NPM_TOKEN, and that exchange cannot succeed
+      # here: trusted publishing has to be configured against a package that already exists.
+      # Measured on run 46173789290: "OIDC token exchange with the npm registry failed: 404
+      # OIDC token exchange error - package not found". Add it back when trusted publishing is
+      # actually set up on npmjs.com, and drop NPM_TOKEN in the same change.
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -24,7 +28,12 @@ jobs:
         with:
           node-version: lts/*
           cache: pnpm
-          registry-url: https://registry.npmjs.org
+          # No registry-url. It makes setup-node write an .npmrc holding
+          # //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN} and point npm's userconfig at
+          # it. This job sets NPM_TOKEN, not NODE_AUTH_TOKEN, so that expands to an empty
+          # string and every registry call goes out unauthenticated — a valid token still
+          # fails with E401. semantic-release writes its own .npmrc from NPM_TOKEN and needs
+          # no registry configured here.
       - run: pnpm install --frozen-lockfile
       # `files` publishes dist/, so it has to be built from this exact commit before the
       # publish step runs. Without this the tarball would be empty.
