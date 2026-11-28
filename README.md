@@ -20,7 +20,9 @@ The first product surface is a developer CLI that produces security-grade report
 
 - Scan a system prompt from a file or direct CLI input
 - Run basic attack prompts
-- Detect possible prompt leakage
+- Detect prompt leakage by word n-gram overlap with the system prompt, including Base64-encoded and reversed output
+- Append a random canary token to the system prompt and flag any response that discloses it (`--no-canary` to turn off)
+- Detect instruction override: injection attacks ask the model to output a random marker, and a response containing it counts as a finding
 - Generate JSON or Markdown report output
 - OpenRouter provider support
 - Mock provider for local testing

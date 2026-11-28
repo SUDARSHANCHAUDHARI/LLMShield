@@ -28,6 +28,7 @@ program
   .option('-m, --model <model>', 'Model name', env.defaultModel)
   .option('--format <format>', 'Report format: json, markdown', 'json')
   .option('-o, --output <path>', 'Write report to file')
+  .option('--no-canary', 'Do not append a canary token to the system prompt')
   .action(async options => {
     const provider = providerSchema.parse(options.provider) as ProviderName;
     const reportFormat = reportFormatSchema.parse(options.format);
@@ -41,7 +42,8 @@ program
       systemPrompt,
       provider,
       model: options.model,
-      output: options.output
+      output: options.output,
+      canary: options.canary
     });
 
     const output = formatReport(report, reportFormat);

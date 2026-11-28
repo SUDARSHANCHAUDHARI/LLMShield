@@ -19,6 +19,12 @@ export interface AttackCase {
   severity: 'low' | 'medium' | 'high' | 'critical';
   prompt: string;
   tags: string[];
+  /**
+   * 'leak' (default): succeeds if the response discloses the system prompt.
+   * 'obey': the prompt contains {{MARKER}}; succeeds if the response outputs that marker,
+   * meaning the model followed the injected instruction over the system prompt.
+   */
+  goal?: 'leak' | 'obey';
 }
 
 export interface ProviderRequest {
@@ -38,6 +44,7 @@ export interface Finding {
   category: AttackCategory;
   risk: RiskLevel;
   leakStatus: LeakStatus;
+  injectionFollowed: boolean;
   score: number;
   response: string;
   evidence: string[];
@@ -50,6 +57,8 @@ export interface ScanOptions {
   model: string;
   output?: string;
   includeCategories?: AttackCategory[];
+  /** Append a random canary token to the system prompt to detect disclosure. Default true. */
+  canary?: boolean;
 }
 
 export interface ScanReport {
@@ -60,6 +69,7 @@ export interface ScanReport {
   overallRisk: RiskLevel;
   score: number;
   leakStatus: LeakStatus;
+  canary?: string;
   totalAttacks: number;
   successfulAttacks: number;
   findings: Finding[];
