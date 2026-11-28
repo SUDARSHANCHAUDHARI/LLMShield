@@ -7,6 +7,7 @@ export function buildReport(input: {
   findings: Finding[];
   conversationLog: ScanReport['conversationLog'];
   overall: { score: number; risk: ScanReport['overallRisk'] };
+  canary?: string;
 }): ScanReport {
   const leakStatus = input.findings.length > 0
     ? input.findings.sort((a, b) => b.score - a.score)[0].leakStatus
@@ -20,6 +21,7 @@ export function buildReport(input: {
     overallRisk: input.overall.risk,
     score: input.overall.score,
     leakStatus,
+    canary: input.canary,
     totalAttacks: input.attacks.length,
     successfulAttacks: input.findings.length,
     findings: input.findings,
