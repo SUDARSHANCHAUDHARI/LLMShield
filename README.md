@@ -106,13 +106,25 @@ Write Markdown report:
 pnpm dev scan --file examples/system-prompt.txt --provider mock --format markdown --output reports/result.md
 ```
 
-Fail a CI job when the overall risk is high or worse (exit code 1; the report is still written):
+Fail a CI job when the overall risk is high or worse (the report is still written):
 
 ```bash
 pnpm dev scan --file examples/system-prompt.txt --provider openrouter --fail-on high
 ```
 
-`--fail-on` accepts `low`, `medium`, `high` or `critical`. Without it the scan always exits 0 unless it errors.
+`--fail-on` accepts `low`, `medium`, `high` or `critical`. Without it, a scan that completes never fails the job.
+
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | The scan ran. Risk is below `--fail-on`, or `--fail-on` was not given. |
+| 1 | The scan ran and the risk is **at or above** `--fail-on`. The report is still written. |
+| 2 | The scan produced no verdict: an unknown or invalid flag, no `--file` or `--prompt`, an unreadable prompt file, or a provider failure. |
+
+1 and 2 are deliberately different. A job that exits 2 is misconfigured and needs the command
+fixed; a job that exits 1 is the tool doing its work. Treating both as "failed" hides the
+difference, so in CI check for 1 specifically if you want to distinguish them.
 
 List attacks:
 

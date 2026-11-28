@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
+import { Command, CommanderError } from 'commander';
 import { env } from './config/env.js';
 import { runScan } from './scanner/scan.js';
 import { getAttackRegistry } from './attacks/registry.js';
@@ -102,7 +102,27 @@ program
     logger.info('anthropic planned');
   });
 
+// Exit codes are the CLI's contract:
+//   0  the scan ran and stayed below --fail-on
+//   1  the scan ran and the risk was at or above --fail-on
+//   2  the scan did not produce a verdict: bad flag, unreadable prompt file, provider failure
+// 1 and 2 have to differ, or a CI job cannot tell a prompt that failed its gate from a
+// pipeline that never reached the model.
+//
+// commander exits 1 by itself on an unknown option or a missing argument, which would land in
+// the --fail-on code. exitOverride makes it throw instead, so those errors reach the catch
+// below and come out as 2 like every other error. It does not reach subcommands on its own,
+// so each one is set explicitly — measured: without this, `scan --bogus-flag` still exits 1.
+for (const command of [program, ...program.commands]) {
+  command.exitOverride();
+}
+
 program.parseAsync(process.argv).catch(error => {
+  if (error instanceof CommanderError) {
+    // --help and --version are not failures, and commander has already written its output.
+    process.exit(error.exitCode === 0 ? 0 : 2);
+  }
+
   logger.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
+  process.exit(2);
 });
